@@ -1,12 +1,14 @@
 import { userRepository } from "../repositories/userRepository.js";
 
 class UserService {
-  // TODO: Implement methods to work with user
   getAllUsers() {
     return userRepository.getAll();
   }
   getUserById(id) {
     return userRepository.getOne({ id });
+  }
+  getUserByEmail(email) {
+    return userRepository.getOne({ email });
   }
   getUser(search) {
     return userRepository.getOne(search);
@@ -21,6 +23,7 @@ class UserService {
   deleteUser(id) {
     return userRepository.delete(id);
   }
+
   search(search) {
     const item = userRepository.getOne(search);
     if (!item) {

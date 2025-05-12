@@ -1,4 +1,6 @@
 import { FIGHTER } from "../models/fighter.js";
+import { fighterService } from "../services/fighterService.js";
+
 const validateFighterFields = (body, isCreate = true) => {
   const allowedKeys = Object.keys(FIGHTER).filter(
     (key) => key !== "id" && key !== "health"
@@ -56,19 +58,41 @@ const validateFighterFields = (body, isCreate = true) => {
   return null;
 };
 
-const createFighterValid = (req, res, next) => {
+const checkNameUnique = async (body, isCreate = true, fighterId = null) => {
+  if ("name" in body) {
+    const fighter = await fighterService.getFighter({ name: body.name });
+    if (fighter && fighter.id !== fighterId) {
+      return "Ім’я вже використовується.";
+    }
+  }
+
+  return null;
+};
+const createFighterValid = async (req, res, next) => {
   const error = validateFighterFields(req.body, true);
   if (error) {
     return res.status(400).json({ error: true, message: error });
   }
+
+  const uniquenessError = await checkNameUnique(req.body, true);
+  if (uniquenessError) {
+    return res.status(409).json({ error: true, message: uniquenessError });
+  }
+
   next();
 };
-
-const updateFighterValid = (req, res, next) => {
+const updateFighterValid = async (req, res, next) => {
   const error = validateFighterFields(req.body, false);
   if (error) {
     return res.status(400).json({ error: true, message: error });
   }
+
+  const fighterId = req.params.id;
+  const uniquenessError = await checkNameUnique(req.body, false, fighterId);
+  if (uniquenessError) {
+    return res.status(409).json({ error: true, message: uniquenessError });
+  }
+
   next();
 };
 

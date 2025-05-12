@@ -1,4 +1,5 @@
 import { USER } from "../models/user.js";
+import { userService } from "../services/userService.js";
 
 const isGmail = (email) => /^[a-zA-Z0-9._%+-]+@gmail\.com$/.test(email);
 const isPhoneUA = (phone) => /^\+380\d{9}$/.test(phone);
@@ -44,20 +45,57 @@ const validateUserFields = (body, isCreate = true) => {
 
   return null;
 };
+const checkEmailAndPhoneUnique = async (
+  body,
+  isCreate = true,
+  userId = null
+) => {
+  if ("email" in body) {
+    const user = await userService.getUser({ email: body.email });
+    if (user && user.id !== userId) {
+      return "Email вже використовується.";
+    }
+  }
 
-const createUserValid = (req, res, next) => {
+  if ("phone" in body) {
+    const user = await userService.getUser({ phone: body.phone });
+    if (user && user.id !== userId) {
+      return "Телефон вже використовується.";
+    }
+  }
+
+  return null;
+};
+const createUserValid = async (req, res, next) => {
   const error = validateUserFields(req.body, true);
   if (error) {
     return res.status(400).json({ error: true, message: error });
   }
+
+  const uniquenessError = await checkEmailAndPhoneUnique(req.body, true);
+  if (uniquenessError) {
+    return res.status(400).json({ error: true, message: uniquenessError });
+  }
+
   next();
 };
 
-const updateUserValid = (req, res, next) => {
+const updateUserValid = async (req, res, next) => {
   const error = validateUserFields(req.body, false);
   if (error) {
     return res.status(400).json({ error: true, message: error });
   }
+
+  const userId = req.params.id;
+  const uniquenessError = await checkEmailAndPhoneUnique(
+    req.body,
+    false,
+    userId
+  );
+  if (uniquenessError) {
+    return res.status(400).json({ error: true, message: uniquenessError });
+  }
+
   next();
 };
 

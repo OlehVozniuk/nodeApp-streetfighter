@@ -8,7 +8,6 @@ const responseMiddleware = (req, res, next) => {
     return res.status(status).json({ error: true, message });
   }
 
-  // якщо middleware нічого не встановило
   return res.status(404).json({ error: true, message: "Дані не знайдено" });
 };
 
